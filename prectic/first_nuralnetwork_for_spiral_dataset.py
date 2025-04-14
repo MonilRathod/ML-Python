@@ -86,9 +86,18 @@ class activation_softmax_Loss_categorical_crossentropy:
         self.dinputs = self.dinputs / samples
 
 
-dense1 = layer_dence(2, 3)
+class optimizer_SGD:
+    def __init__(self, learning_rate=1.0):
+        self.learning_rate = learning_rate
+
+    def update_params(self, layer):
+        layer.weights -= self.learning_rate * layer.dweights
+        layer.biases -= self.learning_rate * layer.dbiases
+
+
+dense1 = layer_dence(2, 64)
 activation1 = activation_relu()
-dense2 = layer_dence(3, 3)
+dense2 = layer_dence(64, 3)
 activation2 = activation_softmax_Loss_categorical_crossentropy()
 dense1.forward(X)
 activation1.forward(dense1.output)
