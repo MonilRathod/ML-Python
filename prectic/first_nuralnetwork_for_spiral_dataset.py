@@ -1,8 +1,10 @@
 import numpy as np
 import nnfs
 from nnfs.datasets import spiral_data
+import matplotlib.pyplot as plt
 
 nnfs.init()
+
 
 X, y = spiral_data(samples=100, classes=3)
 
@@ -70,7 +72,7 @@ class activation_softmax_Loss_categorical_crossentropy:
         self.activation = Activation_Softmax()
         self.loss = Loss_CategoricalCrossentropy()
 
-    def forward(self, inputs):
+    def forward(self, inputs, y):
         self.activation.forward(inputs)
         self.output = self.activation.output
         return self.loss.calculate(self.output, y)
@@ -87,33 +89,54 @@ class activation_softmax_Loss_categorical_crossentropy:
 
 
 class optimizer_SGD:
-    def __init__(self, learning_rate=1.0):
+    def __init__(self, learning_rate=1.0, decay=0):
         self.learning_rate = learning_rate
+        self.current_learning_rate = learning_rate
+        self.decay = decay
+        self.iterations = 0
+
+    def pre_update_params(self):
+        if self.decay:
+            self.current_learning_rate = self.learning_rate * (
+                1.0 / (1.0 + self.decay * self.iterations)
+            )
 
     def update_params(self, layer):
         layer.weights -= self.learning_rate * layer.dweights
         layer.biases -= self.learning_rate * layer.dbiases
+
+    def post_update_params(self):
+        self.iterations += 1
 
 
 dense1 = layer_dence(2, 64)
 activation1 = activation_relu()
 dense2 = layer_dence(64, 3)
 activation2 = activation_softmax_Loss_categorical_crossentropy()
-dense1.forward(X)
-activation1.forward(dense1.output)
-dense2.forward(activation1.output)
-loss = activation2.forward(dense2.output)
-print(activation2.output[:5])
-print("loss", loss)
-accuracy = activation2.loss.calculate_accuracy(activation2.output, y)
-print("Accuracy:", accuracy)
+optimazer = optimizer_SGD(decay=1e-3)
 
-activation2.backward(activation2.output, y)
-dense2.backward(activation2.dinputs)
-activation1.backward(dense2.dinputs)
-dense1.backward(activation1.dinputs)
+for epoch in range(10001):
+    dense1.forward(X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
+    loss = activation2.forward(dense2.output, y)
 
-print(dense1.dweights)
-print(dense1.dbiases)
-print(dense2.dweights)
-print(dense2.dbiases)
+    predictions = np.argmax(activation2.output, axis=1)
+    if len(y.shape) == 2:
+        y = np.argmax(y, axis=1)
+    accuracy = np.mean(predictions == y)
+
+    if not epoch % 100:
+        print(
+            f"epoch: {epoch}, loss: {loss}, accuracy: {accuracy}, lr: {optimazer.current_learning_rate}"
+        )
+
+    activation2.backward(activation2.output, y)
+    dense2.backward(activation2.dinputs)
+    activation1.backward(dense2.dinputs)
+    dense1.backward(activation1.dinputs)
+
+    optimazer.pre_update_params()
+    optimazer.update_params(dense1)
+    optimazer.update_params(dense2)
+    optimazer.post_update_params()
