@@ -250,7 +250,7 @@ ax_accuracy = fig.add_subplot(gs[1, 0])
 ax_spiral = fig.add_subplot(gs[:, 1:])  # Spiral takes 2 rows and 2 columns
 
 
-ani = FuncAnimation(fig, animate, frames=epochs, interval=10)
+ani = FuncAnimation(fig, animate, frames=epochs, interval=1)
 
 plt.tight_layout()
 plt.show()

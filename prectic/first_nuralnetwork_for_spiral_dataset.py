@@ -8,7 +8,6 @@ nnfs.init()
 
 X, y = spiral_data(samples=100, classes=3)
 
-
 class layer_dence:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.10 * np.random.randn(n_inputs, n_neurons)
